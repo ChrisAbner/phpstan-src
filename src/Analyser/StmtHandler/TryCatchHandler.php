@@ -215,6 +215,12 @@ final class TryCatchHandler implements StmtHandler
 
 			if (count($matchingThrowPoints) === 0) {
 				$catchFlows[] = [$originalCatchType, $this->statementsHandler->getVariableMentionFlow($catchNode)];
+
+				// the catch block is not reachable, but rules still need to see its statements;
+				// the result of the walk does not flow anywhere
+				$deadCatchScope = $scope->mergeWith($branchScope)->enterCatchType($originalCatchType, $catchNode->var !== null && is_string($catchNode->var->name) ? $catchNode->var->name : null);
+				$deadCatchResult = $nodeScopeResolver->processStmtNodesInternal($catchNode, $catchNode->stmts, $deadCatchScope, $storage, $nodeCallback, $context);
+				$dependencies[] = $deadCatchResult->getDependencies();
 				continue;
 			}
 
